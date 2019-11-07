@@ -1,0 +1,65 @@
+version: '3'
+
+networks:
+  frontend:
+    driver: ${NETWORKS_DRIVER}
+  backend:
+    driver: ${NETWORKS_DRIVER}
+
+volumes:
+  mysql:
+    driver: ${VOLUMES_DRIVER}
+
+services:
+
+### MySQL ################################################
+    mysql:
+      build:
+        context: ./mysql
+        args:
+          - MYSQL_VERSION=${MYSQL_VERSION}
+      environment:
+        - MYSQL_DATABASE=${MYSQL_DATABASE}
+        - MYSQL_USER=${MYSQL_USER}
+        - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+        - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+        - TZ=${TIMEZONE}
+      volumes:
+        - ${DATA_PATH_HOST}/mysql:/var/lib/mysql
+        - ${MYSQL_ENTRYPOINT_INITDB}:/docker-entrypoint-initdb.d
+      ports:
+        - "${MYSQL_PORT}:3306"
+      networks:
+        - backend
+
+### REDMINE ################################################
+
+    redmine:
+      build:
+        context: ./redmine
+        args:
+          - REDMINE_VERSION=${REDMINE_VERSION}
+      volumes:
+        - ${DATA_PATH_HOST}/redmine/files:/usr/src/redmine/files
+        - ${DATA_PATH_HOST}/redmine/tmp/pdf:/usr/src/redmine/tmp/pdf
+        - ${DATA_PATH_HOST}/redmine/public/plugin_assets:/usr/src/redmine/public/plugin_assets
+        - ${DATA_PATH_HOST}/redmine/log:/usr/src/redmine/log
+        - ${DATA_PATH_HOST}/redmine/
+      environment:
+        REDMINE_DB_MYSQL: mysql
+        REDMINE_DB_PORT: ${MYSQL_PORT}
+        REDMINE_DB_USERNAME: ${MYSQL_USER}
+        REDMINE_DB_PASSWORD: ${MYSQL_PASSWORD}
+        REDMINE_DB_DATABASE: ${MYSQL_DATABASE}
+        SMTP_ADDRESS: ${SMTP_ADDRESS}
+        SMTP_DOMAIN: ${SMTP_DOMAIN}
+        SMTP_USERNAME: ${SMTP_USERNAME}
+        SMTP_PASSWORD: ${SMTP_PASSWORD}
+        SMTP_PORT: ${SMTP_PORT}
+      ports:
+        - "${REDMINE_PORT}:3000"
+      depends_on:
+        - mysql
+      networks:
+        - backend
+        - frontend

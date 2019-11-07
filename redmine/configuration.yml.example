@@ -1,0 +1,9 @@
+production:
+ email_delivery:
+   delivery_method: :smtp
+   smtp_settings:
+     address: ""
+     port: 587
+     domain: "" # 'your.domain.com' for GoogleApps
+     user_name: ""
+     password: ""
